@@ -1,6 +1,5 @@
 # Marsad
 
-*مرصد: an observatory, a place built for watching.*
 
 An agentic media-monitoring system for the communications directorate of a Saudi tourism entity. It reads Arabic and English news every 5 minutes, groups articles about the same event, labels what matters, drafts a cited morning briefing for an analyst to edit and approve, and alerts the team when a serious story about the sector starts to spread. **Nothing reaches the Director General without a person approving it.**
 
