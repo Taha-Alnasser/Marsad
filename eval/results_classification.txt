@@ -1,0 +1,11 @@
+Articles: 30  (high-risk in your labels: 4)
+RECALL on high-risk: 4/4  <- the number that matters most
+False alarms (AI high, you not): 0
+Relevance agreement: 28/30
+Priority agreement:  28/30
+
+Disagreements:
+  real-27      you: off/none    AI: on/low     Jeddah Mayoralty: Design guidelines for Hejazi coastal archi
+               AI's reason: Jeddah Mayoralty made Hejazi coastal architecture guidelines mandatory for residential permits and renovations; Saudi Gazette reported the change in one national outlet.
+  real-331     you: off/none    AI: on/low     دموع طفلة يمنية تختصر فرحة «خليجي 27»
+               AI's reason: Asharq Al-Awsat describes a Yemeni child's emotional reaction in the stands at Gulf Cup 27, carried by one national outlet.

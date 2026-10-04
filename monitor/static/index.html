@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Media Desk</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/basecoat.css">
+<script src="/static/tailwind.js"></script>
+<script src="/static/basecoat.js" defer></script>
+<style type="text/tailwindcss">
+  :root {
+    --background: #f4f2ec; --foreground: #1a1f1c; --card: #fffefb; --card-foreground: #1a1f1c;
+    --muted: #ece8e0; --muted-foreground: #687069; --border: #e2ddd2; --input: #e2ddd2;
+    --primary: #0a6b57; --primary-foreground: #ffffff; --ring: #0a6b57;
+    --secondary: #ece8e0; --secondary-foreground: #1a1f1c; --destructive: #b4361f; --radius: 0.75rem;
+    --high: #b4361f; --high-soft: #fbe8e3; --medium: #8f620a; --medium-soft: #f6edd6;
+    --ok: #0a6b57; --neutral: #a9ada7;
+  }
+  @theme inline {
+    --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card);
+    --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border);
+    --color-primary: var(--primary); --color-high: var(--high);
+  }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .serif { font-family: ui-serif, "New York", "Iowan Old Style", Georgia, serif; }
+  [dir="rtl"] { font-family: "Geeza Pro", "Noto Naskh Arabic", "Segoe UI", sans-serif; }
+  .num { font-variant-numeric: tabular-nums; }
+  .eyebrow { font-size:.7rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-foreground); }
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; border:1px solid var(--border); background:var(--card);
+          border-radius:999px; padding:.15rem .6rem; font-size:.72rem; font-weight:500; line-height:1.45; white-space:nowrap; }
+  .chip-muted { background:var(--muted); border-color:transparent; color:var(--muted-foreground); }
+  .btn-quiet { background:var(--card); color:var(--foreground); border:1px solid var(--border); }
+  .btn-quiet:hover { background:var(--muted); }
+  .tab { padding:.35rem .8rem; border-radius:999px; font-size:.8rem; font-weight:500; color:var(--muted-foreground); }
+  .tab[aria-selected="true"] { background:var(--foreground); color:var(--card); }
+  .spin { display:inline-block; width:.8rem; height:.8rem; border:2px solid var(--border); border-top-color:var(--primary);
+          border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:.3rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #tip { position:fixed; pointer-events:none; background:var(--foreground); color:var(--card); font-size:.75rem;
+         padding:.3rem .55rem; border-radius:.4rem; transform:translate(-50%, -120%); white-space:nowrap; z-index:50; }
+  :focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+</style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+
+<!-- Top bar: identity, live status, and the controls -->
+<header class="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-40">
+  <div class="mx-auto max-w-7xl px-5 py-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <div class="flex items-center gap-3">
+      <img src="/static/favicon.svg" alt="" class="size-9">
+      <div>
+        <h1 class="serif text-xl font-semibold leading-none">Media Desk</h1>
+        <p class="text-xs text-muted-foreground mt-1">Tourism communications · media monitoring</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <span class="chip"><span class="relative flex size-2"><span class="absolute inline-flex size-2 animate-ping rounded-full bg-primary opacity-60"></span><span class="relative size-2 rounded-full bg-primary"></span></span>Live · last run <b class="num" id="lastrun">–</b></span>
+      <span class="chip">Next briefing <b class="num" id="nextbrief">–</b></span>
+    </div>
+    <div class="ml-auto flex flex-wrap items-center gap-2" id="controls">
+      <button class="btn btn-sm btn-quiet" onclick="run('ingest', this)">Fetch news now</button>
+      <button class="btn btn-sm btn-quiet" onclick="run('briefing', this)">Send briefing now</button>
+      <button class="btn btn-sm" onclick="run('crisis', this)">Simulate a crisis</button>
+    </div>
+  </div>
+  <div class="mx-auto max-w-7xl px-5 pb-2 -mt-1 text-xs text-muted-foreground min-h-5" id="runmsg"></div>
+</header>
+
+<main class="mx-auto max-w-7xl px-5 py-7 flex flex-col gap-6">
+
+  <!-- Headline numbers -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="kpis"></section>
+
+  <!-- Stories + side column -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="lg:col-span-2 flex flex-col gap-3">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div><p class="eyebrow">Last 24 hours · most important first</p><h2 class="serif text-2xl font-semibold">Stories</h2></div>
+        <div class="flex gap-1 panel p-1" role="tablist" id="tabs">
+          <button class="tab" role="tab" aria-selected="true" data-filter="all">All</button>
+          <button class="tab" role="tab" aria-selected="false" data-filter="attention">Needs attention</button>
+          <button class="tab" role="tab" aria-selected="false" data-filter="briefing">Briefing only</button>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3" id="stories"></div>
+    </div>
+
+    <aside class="flex flex-col gap-6">
+      <div class="panel p-5 flex flex-col gap-4">
+        <div><p class="eyebrow">What it's about</p><h2 class="serif text-lg font-semibold">On-topic, by theme</h2></div>
+        <div class="flex flex-col gap-2.5" id="themes"></div>
+        <div class="flex flex-col gap-2 pt-3 border-t border-border">
+          <p class="text-sm font-medium">Sentiment toward the sector</p>
+          <div id="sentiment"></div>
+        </div>
+      </div>
+      <div class="panel p-5 flex flex-col gap-3">
+        <div><p class="eyebrow">Audit trail</p><h2 class="serif text-lg font-semibold">Approvals</h2>
+          <p class="text-xs text-muted-foreground">Everything that reached the DG's office: who approved it, when, and whether they edited the AI's draft. Click to see the email.</p></div>
+        <div class="flex flex-col gap-2" id="reviews"></div>
+      </div>
+      <div class="panel p-5 flex flex-col gap-3">
+        <div><p class="eyebrow">Sources</p><h2 class="serif text-lg font-semibold">Feed health</h2></div>
+        <table class="w-full text-sm">
+          <thead><tr class="text-xs text-muted-foreground"><th class="text-left font-medium pb-1">Outlet</th><th class="font-medium pb-1">Lang</th><th class="text-right font-medium pb-1">24 h</th></tr></thead>
+          <tbody id="sources"></tbody>
+        </table>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<div id="tip" hidden></div>
+
+<dialog id="preview" class="dialog" onclick="if (event.target === this) this.close()">
+  <div class="w-[min(760px,94vw)]">
+    <header class="flex items-center justify-between"><h2 id="preview-title">Email</h2>
+      <button class="btn btn-sm btn-quiet" onclick="preview.close()">Close</button></header>
+    <section><iframe id="preview-frame" class="w-full h-[72vh] rounded-lg border border-border bg-white"></iframe></section>
+  </div>
+</dialog>
+
+<script>
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const THEMES = {strategy_visitors: "Strategy & visitor numbers", destinations_projects: "Destinations & giga-projects",
+                  aviation_visa_entry: "Aviation, visa & entry", reputational_risk: "Reputational risk"};
+  const PRIORITY = {
+    high:   '<span class="chip" style="background:var(--high);border-color:var(--high);color:#fff">▲ High</span>',
+    medium: '<span class="chip" style="background:var(--medium-soft);border-color:transparent;color:var(--medium)">● Medium</span>',
+    low:    '<span class="chip chip-muted">Low</span>'};
+  const SENT = {positive: ["Positive", "var(--ok)"], neutral: ["Neutral", "var(--neutral)"], negative: ["Negative", "var(--high)"]};
+  const kpisEl = document.getElementById("kpis");
+  let data = null, filter = "all";
+
+  // One tooltip for every element that has a data-tip
+  document.addEventListener("mousemove", e => {
+    const t = e.target.closest?.("[data-tip]");
+    tip.hidden = !t;
+    if (t) { tip.textContent = t.dataset.tip; tip.style.left = e.clientX + "px"; tip.style.top = e.clientY + "px"; }
+  });
+
+  function kpis(f) {
+    const tile = (label, value, note, color) => `
+      <div class="panel p-5 flex flex-col gap-1">
+        <span class="eyebrow">${label}</span>
+        <span class="serif text-4xl font-semibold num" ${color ? `style="color:${color}"` : ""}>${value.toLocaleString()}</span>
+        <span class="text-xs text-muted-foreground">${note}</span>
+      </div>`;
+    kpisEl.innerHTML =
+      tile("Articles read", f.articles, "from 9 publisher feeds, last 24 h") +
+      tile("Stories", f.stories, "the same event across outlets counts once") +
+      tile("On topic", f.on_topic, `${f.needs_response} need${f.needs_response === 1 ? "s" : ""} a response`) +
+      tile("Alerts", f.alerts, f.alerts ? `${f.alerts_approved} approved by an analyst` : "nothing serious has spread", f.alerts ? "var(--high)" : "");
+  }
+
+  function themeBars(t, s) {
+    const max = Math.max(1, ...Object.values(t));
+    themes.innerHTML = Object.entries(t).map(([k, n]) => `
+      <div class="flex flex-col gap-1">
+        <div class="flex justify-between text-sm"><span>${THEMES[k]}</span><span class="num text-muted-foreground">${n}</span></div>
+        <div class="h-2 rounded-full bg-muted overflow-hidden"><div class="h-full rounded-full" style="width:${(n / max) * 100}%;background:var(--primary)"></div></div>
+      </div>`).join("");
+    const total = Object.values(s).reduce((a, b) => a + b, 0) || 1;
+    sentiment.innerHTML = `
+      <div class="flex h-3 gap-[2px] rounded-full overflow-hidden bg-muted">${Object.entries(s).filter(([, n]) => n).map(([k, n]) =>
+        `<div style="width:${(n / total) * 100}%;background:${SENT[k][1]}" data-tip="${SENT[k][0]}: ${n}"></div>`).join("")}</div>
+      <div class="flex gap-4 text-xs text-muted-foreground mt-1">${Object.entries(s).map(([k, n]) =>
+        `<span class="flex items-center gap-1.5"><span class="size-2 rounded-full" style="background:${SENT[k][1]}"></span>${SENT[k][0]} <b class="num text-foreground">${n}</b></span>`).join("")}</div>`;
+  }
+
+  function outcome(s) {
+    if (s.alert) return s.alert.status === "approved"
+      ? `<span style="color:var(--high)">⚠ Alert sent to the DG's office · approved by ${esc(s.alert.by)} at ${esc(s.alert.at)}</span>`
+      : `<span style="color:var(--high)">⚠ Alert with the on-call analyst · awaiting approval</span>`;
+    if (s.priority === "high") return `<span style="color:var(--medium)">High, not yet amplified · alerts if it spreads</span>`;
+    return `<span style="color:var(--ok)">→ In the 06:00 briefing${s.priority === "medium" ? " · needs a response" : ""}</span>`;
+  }
+
+  function storyList() {
+    const keep = s => filter === "all" || (filter === "attention" ? s.priority !== "low" : s.priority === "low");
+    const rows = data.stories.filter(keep);
+    stories.innerHTML = rows.length ? rows.map(s => `
+      <article class="panel overflow-hidden" ${s.priority === "high" ? 'style="border-color:var(--high);box-shadow:0 0 0 3px var(--high-soft)"' : ""}>
+        <div class="flex gap-4 p-5">
+          <div class="flex-1 min-w-0 flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">${PRIORITY[s.priority] ?? ""}
+              ${s.themes.map(t => `<span class="chip">${THEMES[t] ?? t}</span>`).join("")}
+              <span class="chip" title="Sentiment toward the sector"><span class="size-2 rounded-full" style="background:${SENT[s.sentiment]?.[1]}"></span>${SENT[s.sentiment]?.[0] ?? ""}</span>
+            </div>
+            <a href="${esc(s.url)}" target="_blank" dir="auto" class="serif text-xl font-semibold leading-snug hover:underline">${esc(s.title)}</a>
+            <p class="text-sm leading-relaxed" style="color:#3d433f"><span class="text-muted-foreground">Why it matters:</span> ${esc(s.why)}</p>
+            <p class="text-xs font-medium">${outcome(s)}</p>
+            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+              <span class="text-xs text-muted-foreground mr-1">${s.outlets.length} outlet${s.outlets.length > 1 ? "s" : ""} · ${esc(s.first_seen)}${s.last_seen !== s.first_seen ? " → " + esc(s.last_seen) : ""}</span>
+              ${s.outlets.map(o => `<span class="chip ${o.intl ? "" : "chip-muted"}" title="${o.intl ? "International outlet" : "National outlet"}">${o.intl ? "🌐 " : ""}${esc(o.name)}</span>`).join("")}
+            </div>
+          </div>
+          ${s.image ? `<img src="${esc(s.image)}" alt="" class="hidden sm:block w-36 h-28 object-cover rounded-lg shrink-0">` : ""}
+        </div>
+      </article>`).join("")
+      : `<div class="panel p-8 text-sm text-muted-foreground text-center">Nothing here in the last 24 hours.</div>`;
+  }
+
+  function reviewList(rows) {
+    reviews.innerHTML = rows.slice(0, 6).map(r => {
+      const status = r.status === "approved" ? `<span class="chip" style="background:var(--ok);border-color:var(--ok);color:#fff">Approved</span>`
+                   : r.status === "rejected" ? `<span class="chip chip-muted">${r.kind === "alert" ? "Dismissed" : "Rejected"}</span>`
+                   : `<span class="chip">Awaiting analyst</span>`;
+      const detail = r.by ? `by ${esc(r.by)} · ${esc(r.decided)}${r.status === "approved" ? (r.edited ? " · edited the AI draft" : " · sent as drafted") : ""}`
+                          : `drafted ${esc(r.created)}`;
+      return `
+      <button class="text-left rounded-lg border border-border p-3 flex flex-col gap-1 hover:bg-muted transition-colors" onclick="openEmail(${r.id}, '${r.kind}')">
+        <div class="flex items-center justify-between gap-2"><span class="text-sm font-medium">${r.kind === "alert" ? "⚠ Alert" : "Briefing"} #${r.id}</span>${status}</div>
+        <span class="text-xs text-muted-foreground">${detail}</span>
+      </button>`;}).join("") || `<p class="text-sm text-muted-foreground">Nothing approved yet.</p>`;
+  }
+
+  function sourceTable(rows) {
+    sources.innerHTML = rows.map(s => `
+      <tr class="border-t border-border" title="${esc(s.error || "Last run OK")}">
+        <td class="py-1.5"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full" style="background:${s.status === "ok" ? "var(--ok)" : "var(--high)"}"></span>
+          ${s.demo ? `<span class="text-muted-foreground">Demo feed</span><span class="chip" style="border-style:dashed">live demo</span>` : esc(s.name)}</span></td>
+        <td class="text-center text-xs text-muted-foreground uppercase">${esc(s.lang)}</td>
+        <td class="text-right num">${s.today}</td>
+      </tr>`).join("");
+  }
+
+  async function load() {
+    data = await (await fetch("/api/overview")).json();
+    lastrun.textContent = data.last_run?.slice(-5) ?? "–";
+    nextbrief.textContent = data.next_briefing;
+    kpis(data.funnel); themeBars(data.themes, data.sentiment);
+    storyList(); reviewList(data.reviews); sourceTable(data.sources);
+  }
+
+  tabs.addEventListener("click", e => {
+    const b = e.target.closest(".tab"); if (!b) return;
+    filter = b.dataset.filter;
+    tabs.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t === b));
+    storyList();
+  });
+
+  function openEmail(id, kind) {
+    document.getElementById("preview-title").textContent = `${kind === "alert" ? "Alert" : "Briefing"} #${id}`;
+    document.getElementById("preview-frame").src = `/briefing/${id}/view`;
+    preview.showModal();
+  }
+
+  async function run(job, button) {
+    const before = await (await fetch("/api/overview")).json();
+    const r = await (await fetch(`/run/${job}`, {method: "POST"})).json();
+    if (!r.ok) { runmsg.style.color = "var(--high)"; runmsg.textContent = r.message; return; }
+    runmsg.style.color = "";
+    controls.querySelectorAll("button").forEach(b => b.disabled = true);
+    const started = new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+    runmsg.innerHTML = `<span class="spin"></span>${esc(r.message)} Started ${started}…`;
+    for (let i = 0; i < 100; i++) {                 // done when the data changes
+      await new Promise(ok => setTimeout(ok, 3000));
+      const d = await (await fetch("/api/overview")).json();
+      const changed = job === "briefing" ? d.reviews[0]?.id !== before.reviews[0]?.id
+                                         : d.last_run !== before.last_run;
+      if (changed) {
+        runmsg.textContent = job === "briefing" ? "✓ Done: the draft is in the analyst's inbox."
+          : job === "crisis" ? "✓ Published. The alert reaches the analyst's inbox once the AI has labelled it (about a minute)."
+          : `✓ Done: fetched at ${d.last_run.slice(-5)}. New stories appear as the AI labels them.`;
+        break;
+      }
+    }
+    controls.querySelectorAll("button").forEach(b => b.disabled = false);
+    load();
+  }
+
+  load(); setInterval(load, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+They are thinking of replacing the job that humans do fully, when my first thought is that there is a cultural understanding that reads between words that AI may not be capable of doing, and only people of the same culture/saudi would be able to understand. maybe another approach is to speed their process by making AI at least flag the obviously urgent ones, alert based on that. Or do the briefing for the same kind of employees, just to help them scan the existing articles faster and more kinda scanny that having to read them lots of articles fully.
+Verdict, ai might miss details if we make the process just a human sign off on the summary, try a different approach from the beginning.
+
+——
+day1:
+The case talks about two problems, the manual process that humans have to go through with reviewing 40 news outlets and quality is inconsistent because it’s humans, so things get missed sometimes. The other problem is that the manual briefing happens only every morning, which would mean that if an urgent risk in reputation happens during the afternoon, it stalls for the next morning.
+
+The solution is that we build something that ingests the news from a couple of sources that I still haven’t decided how to todo
+then from the ingested data, I have an LLM using openai api with human written system prompt about what it should do and how, maybe research some skills in claude that are specifically for this task.
+
+then connect that with n8n, so that in some way, the agent sends an analyst for approval at 6, the analyst can edit the text directly and approve and once approved, n8n schedules the send at 7:30 to the director on an email. This is going to use docker on my device for n8n and openai api
+
+Then I want to think of how we are going with our eval, this needs some research on modern eval approaches.
+
+This also has to be controllable, for them to add new sources that we make sure the LLM ingests, because maybe it’s not the best at searching.   Now the second problem, it should use plain Python polling RSS feeds news every 5 minutes, and classifies whether something is a high risk reputation, this needs a lot of definition to what counts as urgent, and also an eval. this would be connected in n8n in the same way and sent to an on call analyst for approval to reach the director.
+
+high risk definition: The industry pattern for crisis alerts scores roughly three things. One framework describes it as severity is how bad it is, reach risk is how far it travels, with extra flags for the things that change the response rather than the grade. Others add velocity: a rapidly increasing rate of mentions suggesting viral spread potential, and amplification when high reach accounts pick up negative content. The repeated lesson is to alert on the spike, not the mention. One angry customer is not a crisis.
+
+1. About us: mentions the entity, its leadership, a giga project, or visa and entry policy
+2. Negative and serious: safety or harm to visitors, allegations (corruption, mistreatment), criticism from a foreign government or official body, misinformation about policy, project delay or cancellation
+3. Amplified: published by a top tier or international outlet, OR the same story picked up by 3+ outlets
+
+eval: Eval, specific to this case. Four layers:
+1. Classification: hand label around 60 articles yourself, including Arabic ones and tricky cases. Binary pass/fail per field. For the alert, the costly mistake is missing a high risk story, so measure recall first and accept some false alarms. Say that tradeoff out loud in the presentation; it's a judgment call the panel will like.
+2. Briefing faithfulness, claim by claim. Split the briefing into individual claims, each must cite an article. Then check each claim against its source. Research uses error types like these: a statement introducing facts not found in or verifiable by the article, an entity error such as a wrong name, number, or pronoun, and a statement that contradicts the article. Use that as your judge prompt. arxiv
+3. A cheap deterministic check first. Tourism briefings are full of numbers (visitor counts, dates, project budgets). Every number in the briefing must appear in the cited article's text, checked in plain Python. No LLM needed, catches the worst hallucinations. A team doing financial news summarisation found the same thing: semantic proximity is not fact verification, and that when you are evaluating summaries across millions of assets, the first filter needs to be cheap. yldyld
+4. Check the judge before trusting it. Run the LLM judge on your 60 labelled items and see how often it agrees with you. Research finds LLM judges achieve a strong correlation with human judgments on news faithfulness, but you show yours does on this data.
+For the faithfulness judge, I adapted the error categories from FineSurE and UniSumEval: facts not in the article, wrong entity or number, contradiction. Then I checked the judge against my own labels before trusting it.
+
+
+Failure stories:
+the system does a health check every 15 minutes, so we can know early on if anything is wrong and work on backup or fixing If a couple of news are not accessible in RSS errors or something, when we send the message to the analyst, we give him that as part of the alert and briefing, so that they’re aware. if LLM api is down we just send the analyst the ingested news, with a message telling them that the LLM is down and the briefing failed, and to do it manually.  How do we make sure the analyst actually takes care of it? We give them a deadline everyday by 6:50, if no approval, it gets sent as an urgency to a second analyst that they have for backup, and the message gets sent as soon as it is approved dedup? normalized title similarity.

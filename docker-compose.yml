@@ -1,0 +1,18 @@
+# Starts n8n, the orchestrator: schedules, approvals, email.
+# Run:  docker compose up -d     then open http://localhost:5678
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.42.2   # pinned: same version every time
+    restart: unless-stopped                 # comes back after a crash or reboot
+    ports:
+      - "5678:5678"                         # n8n's web editor on your Mac
+    environment:
+      - GENERIC_TIMEZONE=Asia/Riyadh        # n8n schedules run on Riyadh time
+      - TZ=Asia/Riyadh                      # the container's clock, too
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # lets n8n reach our Python API on the Mac
+    volumes:
+      - n8n_data:/home/node/.n8n            # workflows + credentials survive restarts
+
+volumes:
+  n8n_data:

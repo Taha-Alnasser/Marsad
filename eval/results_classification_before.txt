@@ -1,0 +1,11 @@
+Articles: 30  (high-risk in your labels: 4)
+RECALL on high-risk: 3/4  <- the number that matters most
+False alarms (AI high, you not): 0
+Relevance agreement: 29/30
+Priority agreement:  28/30
+
+Disagreements:
+  synthetic-2  you: on/high    AI: on/medium  Several tourists injured as stage structure collapses at Riy
+               AI's reason: BBC reports at least six visitors were hospitalized after a stage structure collapsed at a Riyadh Season concert; the story appeared in four outlets, including two international.
+  real-331     you: off/none    AI: on/low     دموع طفلة يمنية تختصر فرحة «خليجي 27»
+               AI's reason: Asharq Al-Awsat describes a Yemeni girl’s emotional joy in the stands at Gulf 27, a fan-experience story carried by one national outlet.

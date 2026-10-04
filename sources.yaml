@@ -1,0 +1,71 @@
+# Media sources the poller ingests.
+# Analysts add/disable sources here — no code change needed.
+# Why each source was chosen: see SOURCES.md.
+#
+# tier:   international | national | social   (international = counts as "amplified" for alerts)
+
+sources:
+  - id: saudigazette
+    name: Saudi Gazette
+    url: https://saudigazette.com.sa/rssFeed/0
+    lang: en
+    tier: national
+
+
+  - id: aawsat_ar
+    name: Asharq Al-Awsat           # الشرق الأوسط
+    url: https://aawsat.com/feed
+    lang: ar
+    tier: national
+    # ~300 items per pull, ~13% on topic.
+
+  - id: bbc_arabic
+    name: BBC Arabic                # بي بي سي عربي
+    url: https://feeds.bbci.co.uk/arabic/rss.xml
+    lang: ar
+    tier: international
+
+
+  - id: aljazirah
+    name: Al Jazirah                # الجزيرة, Riyadh daily; not Al Jazeera
+    url: https://www.al-jazirah.com/rss/ln.xml
+    lang: ar
+    tier: national
+    # Print edition: ~7 items, once a day at midnight. Briefing only, not alerts.
+
+  - id: almonitor
+    name: Al-Monitor
+    url: https://www.al-monitor.com/rss
+    lang: en
+    tier: international
+
+  - id: aljazeera_ar
+    name: Al Jazeera Arabic         # الجزيرة نت, Qatar
+    url: https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9
+    lang: ar
+    tier: international
+
+  - id: guardian_saudi
+    name: The Guardian
+    url: https://www.theguardian.com/world/saudiarabia/rss
+    lang: en
+    tier: international
+
+  - id: bbc_me
+    name: BBC News
+    url: https://feeds.bbci.co.uk/news/world/middle_east/rss.xml
+    lang: en
+    tier: international
+
+  - id: skift
+    name: Skift
+    url: https://skift.com/feed/
+    lang: en
+    tier: international
+
+  - id: demo
+    name: Demo feed (synthetic)
+    url: http://127.0.0.1:8000/demo/feed.xml
+    lang: en
+    tier: international        # one international outlet counts as "amplified"
+    enabled: true             # switch on for the live demo; articles come from: python -m monitor.demo add

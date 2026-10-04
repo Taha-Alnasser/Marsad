@@ -1,0 +1,8 @@
+feedparser==6.0.14      # reads RSS feeds into Python objects
+httpx==0.28.1           # downloads the feeds (timeouts, browser User-Agent)
+PyYAML==6.0.3           # reads sources.yaml
+python-dotenv==1.2.4    # loads .env into the environment
+openai==3.24.0          # embeddings + GPT-6 Luna / GPT-6.1 Sol
+numpy==2.5.3            # compares embeddings (cosine similarity)
+fastapi==0.142.2        # the web endpoints n8n calls
+uvicorn==0.54.0         # runs the FastAPI server

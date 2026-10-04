@@ -1,0 +1,16 @@
+# Secrets: never commit
+.env
+
+# Local data: the SQLite database is rebuilt by running the pipeline
+data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# The case brief is confidential ("do not share it"): never commit it
+FDE_Case_Study_A_Media_Monitoring_Agent.pdf
