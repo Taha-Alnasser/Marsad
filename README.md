@@ -112,16 +112,6 @@ At the directorate's real volume of about **1,500 items a day**: **about $7 a mo
 
 ---
 
-## Security and production
-
-The prototype uses public news only. For confidential documents and a government deployment:
-- **Everything runs inside the client's environment:** n8n and the Python service on the client's servers; SQLite becomes **Postgres** with per-role access control.
-- **AI inside the walls:** an in-region model deployment, and an open-source embedding model (`bge-m3`) running locally, so no document leaves the network.
-- **Audit trail:** every briefing and alert keeps the AI draft, the approved text, who approved it and when.
-- **News licensing:** RSS is the publishers' shop window; production should use licensed content, as commercial monitoring services do.
-
----
-
 ## Known limits
 
 - No Q&A over the archive yet (cut for time).
