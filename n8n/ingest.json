@@ -1,4 +1,5 @@
 {
+  "id": "FOeOWr38sPpg4Sxk",
   "name": "ingest every 5 mins",
   "nodes": [
     {
@@ -62,7 +63,7 @@
       "typeVersion": 4.5,
       "position": [
         624,
-        224
+        208
       ],
       "id": "0cb8a339-ecb4-4980-82ad-20a3bd93b7da",
       "name": "Record Approval"
@@ -85,7 +86,7 @@
       ],
       "id": "1681449e-f09b-46b8-a84d-bd55b8cb98de",
       "name": "Email DG",
-      "webhookId": "9d2b623d-b64c-4c83-a991-b018458f2f05",
+      "webhookId": "91ef9cab-5b1f-41f9-afda-db083b5d8d97",
       "credentials": {
         "smtp": {
           "name": "Gmail Sender"
@@ -159,7 +160,7 @@
       ],
       "id": "8e9c4967-42d6-46fb-b332-cad820382e0b",
       "name": "Ask on-call analyst",
-      "webhookId": "3839d366-abb3-4070-bd38-49b22e052e8b",
+      "webhookId": "07842243-1f52-4dea-bd56-439ee9c253a9",
       "credentials": {
         "smtp": {
           "name": "Gmail Sender"
@@ -214,7 +215,39 @@
       ],
       "id": "e625b542-f6f8-4263-9602-9d4c59342599",
       "name": "Demo Trigger",
-      "webhookId": "615a6a92-2824-4f7d-b543-a28c9b778954"
+      "webhookId": "7f2c5562-61b8-4860-9b34-fd6a4b1c3183"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/briefing/{{ $('Split Out').item.json.id }}/decision",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "rejected"
+            },
+            {
+              "name": "text",
+              "value": "= {{ $('Ask on-call analyst').item.json.data.Alert }}"
+            },
+            {
+              "name": "by",
+              "value": "={{ $('Ask on-call analyst').item.json.data['Your name'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        624,
+        336
+      ],
+      "id": "1abe7f5c-d783-48f2-a06a-7b3e3ea833ab",
+      "name": "Record Rejection"
     }
   ],
   "connections": {
@@ -223,6 +256,13 @@
         [
           {
             "node": "Record Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Rejection",
             "type": "main",
             "index": 0
           }

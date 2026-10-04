@@ -1,4 +1,5 @@
 {
+  "id": "IhGqMcPyRXKkW7OT",
   "name": "Daily briefing",
   "nodes": [
     {
@@ -85,7 +86,7 @@
       ],
       "id": "b8d29494-e768-4088-96f9-07e6a228c0ec",
       "name": "Ask analyst",
-      "webhookId": "3839d366-abb3-4070-bd38-49b22e052e8b",
+      "webhookId": "10bebd13-fe87-41a1-bc7b-4e672b70225e",
       "credentials": {
         "smtp": {
           "name": "Gmail Sender"
@@ -159,7 +160,7 @@
       ],
       "id": "bf151021-d7b2-46be-9eb3-9d8adb38657c",
       "name": "Email DG",
-      "webhookId": "9d2b623d-b64c-4c83-a991-b018458f2f05",
+      "webhookId": "5406372f-8f26-47e8-b91c-ab2e85f609b8",
       "credentials": {
         "smtp": {
           "name": "Gmail Sender"
@@ -180,7 +181,7 @@
       ],
       "id": "c34bd4e2-6011-42e0-b668-0c2ed8a51c20",
       "name": "Demo Trigger",
-      "webhookId": "615a6a92-2824-4f7d-b543-a28c9b778954"
+      "webhookId": "7160e62f-f3fb-4e86-b612-55181bde978a"
     },
     {
       "parameters": {
@@ -200,6 +201,38 @@
       ],
       "id": "1c037566-f91e-4136-ac8a-74a1da278bb2",
       "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/briefing/{{ $('Draft Brief').item.json.id }}/decision",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "rejected"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Ask analyst').item.json.data.Briefing }}"
+            },
+            {
+              "name": "by",
+              "value": "={{ $('Ask analyst').item.json.data['Your name'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        64
+      ],
+      "id": "5075d179-3527-44fa-aa95-3ad62cb79380",
+      "name": "Record Rejection"
     }
   ],
   "connections": {
@@ -208,6 +241,13 @@
         [
           {
             "node": "Record Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Rejection",
             "type": "main",
             "index": 0
           }

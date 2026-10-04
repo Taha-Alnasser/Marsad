@@ -31,7 +31,7 @@ flowchart LR
 | n8n | Schedules, approval forms, email | Human sign-off built in |
 | Python + FastAPI | Fetch, group, classify, draft | Plain code, no agent framework |
 | Embeddings | Same event across outlets and languages → one story | Needed to count how far a story spreads |
-| GPT-6 Luna | Labels every article | Cheap; caught 4 of 4 crises in the eval, no false alarms |
+| GPT-6 Luna | Labels every article | Cheap; 4 of 4 high-risk caught in a labelled set of 30, no false alarms |
 | GPT-6.1 Sol | Writes the daily briefing | Best quality where the DG reads |
 | SQLite | Articles, labels, approvals | Zero setup; Postgres in production |
 

@@ -9,7 +9,7 @@ from monitor import config, db
 
 INSTRUCTIONS = (config.ROOT / "prompts" / "classify.md").read_text(encoding="utf-8")
 RANK = {"none": 0, "low": 1, "medium": 2, "high": 3}
-client = OpenAI()
+client = OpenAI(max_retries=6)    # on a rate limit, wait and retry (the first run labels ~500 articles at once)
 
 # The fixed output format. Justification comes first so the model reasons before it labels.
 SCHEMA = {
@@ -55,7 +55,7 @@ def run() -> dict:
     todo = conn.execute("""SELECT * FROM items WHERE story_id IS NOT NULL
                            AND id NOT IN (SELECT item_id FROM classifications)""").fetchall()
     inputs = [describe(conn, item) for item in todo]
-    with ThreadPoolExecutor(max_workers=8) as pool:           # 8 calls at a time, not one by one
+    with ThreadPoolExecutor(max_workers=4) as pool:           # 4 calls at a time, not one by one
         results = list(pool.map(lambda x: safe(judge, x[0]), inputs))
 
     done = failed = 0

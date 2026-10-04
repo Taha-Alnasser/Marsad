@@ -46,7 +46,7 @@ Reset the demo: `.venv/bin/python -m monitor.demo reset`
 | Cited daily briefing | GPT-6.1 Sol at 06:00; every number checked against its source |
 | n8n approval, scheduled delivery | Analyst edits and approves; DG gets an email; every approval logged |
 | Alert within 15 min | ~5 min; only when serious **and** spreading; once per story |
-| Q&A over the archive | Cut for time |
+| Q&A over the archive | Cut for time (see below) |
 
 ## How it works
 
@@ -71,7 +71,7 @@ flowchart LR
 | `monitor/classify.py`, `prompts/classify.md` | Label each article |
 | `monitor/briefing.py`, `prompts/briefing.md` | Draft the briefing, check numbers, build the email |
 | `monitor/alerts.py` | Alert when high and amplified |
-| `monitor/api.py` | Endpoints for n8n, and the control room |
+| `monitor/api.py` | Endpoints for n8n, and the control room. Briefings and alerts share one approval endpoint (`/briefing/{id}/decision`) by design: alerts are rows in the same table |
 | `eval/` | Labelled set and eval script |
 
 ## Evaluation
@@ -80,9 +80,11 @@ flowchart LR
 
 | | |
 |---|---|
-| Crises caught | **4 / 4** |
+| High-risk caught | **4 of 4** in a labelled set of 30 |
 | False alarms | **0** |
 | Relevance agreement | 28 / 30 |
+
+Four positives is a small sample: the recall number needs far more labelled crises before it can be trusted.
 
 Run: `.venv/bin/python -m eval.run_eval`
 
@@ -90,10 +92,14 @@ Run: `.venv/bin/python -m eval.run_eval`
 
 **~$7 a month** at 1,500 articles a day. Breakdown in `docs/ARCHITECTURE.md`.
 
-## Not done yet
+## Designed, not built
 
-- Q&A over the archive
-- Escalation when an approval is late
-- Social media (X API is paid)
+| What | Design |
+|---|---|
+| Escalation | No approval by 06:50 → the draft goes to a backup analyst (a wait-time limit on the approval step). Still none by 07:30 → the DG's office is told the briefing is late |
+| Rejected briefing | Today a rejection is recorded and nothing is sent. Next: the analyst's comment goes back to the model for a second draft |
+| Q&A over the archive | Search the stored embeddings, answer with cited articles. Cut for time |
+| Social media | X API is paid. Cut |
+| AI fact-checker | A second model checks names and claims against sources; only after measuring it against analysts |
 
 Decisions and trade-offs: `docs/DECISIONS.md`
