@@ -1,123 +1,99 @@
 # Marsad
 
+Monitors Arabic and English news for a Saudi tourism communications team, drafts a cited daily briefing, and alerts on negative stories as they spread. An analyst approves everything before it reaches the Director General.
 
-An agentic media-monitoring system for the communications directorate of a Saudi tourism entity. It reads Arabic and English news every 5 minutes, groups articles about the same event, labels what matters, drafts a cited morning briefing for an analyst to edit and approve, and alerts the team when a serious story about the sector starts to spread. **Nothing reaches the Director General without a person approving it.**
-
-Built with **Python**, the **OpenAI API** and **n8n**.
+Python · OpenAI API · n8n
 
 ---
 
-## Run it (about 15 minutes)
+## Run it
 
-**You need:** macOS or Linux · [Docker Desktop](https://www.docker.com/products/docker-desktop/) running · Python 3.11+ · an OpenAI API key · a Gmail account with an [app password](https://myaccount.google.com/apppasswords) (2-Step Verification on).
+**Needs:** Docker Desktop (running), Python 3.11+, an OpenAI API key, a Gmail account with an [app password](https://myaccount.google.com/apppasswords).
 
-**1. Start everything**
 ```bash
-git clone <this repo> marsad && cd marsad
-cp .env.example .env          # then put your OpenAI key in .env
-./start.sh                    # first run also installs Python libraries
+git clone https://github.com/Taha-Alnasser/Marsad.git && cd Marsad
+cp .env.example .env        # add your OpenAI key
+./start.sh                  # ./start.sh stop to stop
 ```
-`./start.sh stop` stops everything.
 
-**2. Set up n8n (first time only, ~5 minutes)**, at http://localhost:5678
-1. Create the local owner account.
-2. **Credentials → Create → SMTP:** user = your Gmail address, password = the app password, host `smtp.gmail.com`, port `465`, SSL on. Name it `Gmail sender`.
-3. **Import the two workflows** from the `n8n/` folder: `ingest.json` and `daily-briefing.json` (Create workflow → ⋯ menu → Import from file).
-4. In each email node, choose the **Gmail sender** credential and replace the placeholder addresses: `sender@example.com` (your Gmail), `analyst@example.com` (the analyst), `dg-office@example.com` (the DG's office).
-5. **Switch both workflows on** (they run on schedule, and the control room's buttons start them through their webhooks).
-
----
+**n8n, first time only** (http://localhost:5678):
+1. Create the owner account.
+2. Credentials → SMTP: your Gmail, the app password, `smtp.gmail.com`, port `465`, SSL on. Name it `Gmail sender`.
+3. Import `n8n/ingest.json` and `n8n/daily-briefing.json`.
+4. In each email node: pick `Gmail sender`, replace `sender@`, `analyst@` and `dg-office@example.com` with real addresses.
+5. Switch both workflows on.
 
 ## Try it
 
-Open the **control room**: http://127.0.0.1:8000/. It runs on its own (news every 5 minutes, briefing at 06:00 Riyadh), and its **Controls** run things now:
+Control room: http://127.0.0.1:8000/
 
-| Button | What happens |
+| Button | Result |
 |---|---|
-| **Fetch news now** | Reads all feeds, groups and labels new articles. The page fills in within a minute. |
-| **Send briefing to analyst now** | The analyst gets "Daily briefing draft". Open it → **Review and approve** → edit anything → **Approve and send** → the DG's office receives the formatted briefing. |
-| **Simulate a crisis (demo)** | Publishes a synthetic negative story into the demo feed and fetches. The analyst gets "⚠ High-risk alert" within a minute → approve → it reaches the DG's office. |
+| Fetch news now | Reads all feeds; new stories appear |
+| Send briefing now | Analyst gets the draft → edits → approves → DG gets it |
+| Simulate a crisis | A fake negative story → alert to the analyst → approve → DG gets it |
 
-Every briefing and alert appears under **Approvals**: click one to see the exact email that was sent, who approved it and when. Reset the demo: `.venv/bin/python -m monitor.demo reset`.
+Reset the demo: `.venv/bin/python -m monitor.demo reset`
 
 ---
 
-## What was built, requirement by requirement
+## The brief, covered
 
-| The brief asks for | What this does |
+| Requirement | Done |
 |---|---|
-| Ingest 8+ sources, Arabic a plus, de-duplicate | **9 publisher RSS feeds, 5 in Arabic.** Exact duplicates are rejected by URL; the same event across outlets and languages is grouped into one *story* using embeddings. |
-| Classify against 4 themes, with sentiment, priority and a justification | **GPT-6 Luna** labels every new article. On 30 hand-labelled articles: **every high-risk story caught, no false alarms.** |
-| A daily briefing in the directorate's structure, every source cited | **GPT-6.1 Sol** writes it at 06:00. Every sentence cites a numbered source; links come from our database, never from the AI. Every number is checked against its source. |
-| Route through n8n to a named analyst; deliver on a schedule | The analyst gets an email with a form, **edits the draft**, approves, and the DG's office receives a formatted email. Who approved what, and when, is recorded. |
-| Alert within 15 minutes on high reputational risk | About **5 minutes**. An alert needs the AI to judge a story *about us* and *negative and serious*, **and** the code to count it as *amplified* (an international outlet, or 3+ outlets). One alert per story, approved by an analyst first. |
-| Ask the archive questions in plain language | **Cut for time**, as the brief allows. Planned next (the stored embeddings make it straightforward). |
-
----
+| 8+ sources, Arabic, dedup | 9 feeds (5 Arabic); same event across outlets = one story |
+| Classify: 4 themes, sentiment, priority, reason | GPT-6 Luna, every article |
+| Cited daily briefing | GPT-6.1 Sol at 06:00; every number checked against its source |
+| n8n approval, scheduled delivery | Analyst edits and approves; DG gets an email; every approval logged |
+| Alert within 15 min | ~5 min; only when serious **and** spreading; once per story |
+| Q&A over the archive | Cut for time |
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    F[9 RSS feeds<br/>+ demo feed] -->|every 5 min| I[Fetch & store<br/>new articles]
-    subgraph Python [Python · FastAPI]
-      I --> E[Embed &<br/>group into stories]
-      E --> C[Classify<br/>GPT-6 Luna]
-      C --> A{High + amplified?}
-      C --> B[06:00 briefing<br/>GPT-6.1 Sol<br/>+ number check]
-    end
-    A -->|yes, once per story| N1[n8n: alert form<br/>to on-call analyst]
-    B --> N2[n8n: briefing form<br/>to analyst]
-    N1 -->|approved| DG[Email to the<br/>DG's office]
+    F[9 RSS feeds] -->|every 5 min| I[Ingest]
+    I --> G[Group into stories]
+    G --> C[Classify · Luna]
+    C --> A{High + amplified?}
+    C --> B[06:00 briefing · Sol]
+    A -->|yes, once| N1[Alert form · n8n]
+    B --> N2[Briefing form · n8n]
+    N1 -->|approved| DG[DG's office]
     N2 -->|approved| DG
-    DB[(SQLite)] --- Python
 ```
 
-**n8n is the clock and the switchboard; Python does the work.** n8n triggers ingestion every 5 minutes and the briefing at 06:00, sends the analyst forms, waits for approval and delivers the email. Python fetches, groups, labels, drafts and records.
-
-| File | What it does |
+| File | Does |
 |---|---|
-| `sources.yaml` | The news feeds. Add one here; the next run picks it up. |
-| `monitor/ingest.py` | Fetches each feed, saves new articles, logs each feed's health. |
-| `monitor/stories.py` | Embeds articles (`text-embedding-3-large`) and groups the same event across outlets and languages. |
-| `monitor/classify.py` + `prompts/classify.md` | Labels each article: relevance, themes, sentiment, priority, justification. |
-| `monitor/briefing.py` + `prompts/briefing.md` | Drafts the briefing, numbers the citations, checks every number, builds the email. Falls back to a plain story list if the AI is down. |
-| `monitor/alerts.py` | Turns a story into an alert when it's high **and** amplified, once. |
-| `monitor/api.py` | The endpoints n8n calls, and the control room. |
-| `monitor/db.py` | The SQLite tables. |
-| `monitor/demo.py` | The demo feed: `python -m monitor.demo add` / `reset`. |
-| `eval/` | The labelled set and the classification eval. |
-| `docs/` | Decisions (`DECISIONS.md`), sources, concepts, plan, demo script. |
-
----
+| `sources.yaml` | The feeds |
+| `monitor/ingest.py` | Fetch and store new articles |
+| `monitor/stories.py` | Group the same event into one story |
+| `monitor/classify.py`, `prompts/classify.md` | Label each article |
+| `monitor/briefing.py`, `prompts/briefing.md` | Draft the briefing, check numbers, build the email |
+| `monitor/alerts.py` | Alert when high and amplified |
+| `monitor/api.py` | Endpoints for n8n, and the control room |
+| `eval/` | Labelled set and eval script |
 
 ## Evaluation
 
-30 articles (22 real, 8 synthetic crisis cases, 9 Arabic), hand-labelled by the analyst. **Recall on high-risk comes first:** missing a crisis is the expensive mistake.
+30 hand-labelled articles (22 real, 8 synthetic, 9 Arabic).
 
-| | Result |
+| | |
 |---|---|
-| High-risk stories caught | **4 / 4** |
+| Crises caught | **4 / 4** |
 | False alarms | **0** |
 | Relevance agreement | 28 / 30 |
-| Priority agreement | 28 / 30 |
 
-The remaining disagreements are borderline low-priority items, and they err toward including. Re-run: `.venv/bin/python -m eval.run_eval`. Details and caveats: `docs/DECISIONS.md` (D33). Every live briefing also passes a **number check**: each number must appear in the article its sentence cites; mismatches are shown to the analyst before approval.
-
----
+Run: `.venv/bin/python -m eval.run_eval`
 
 ## Cost
 
-At the directorate's real volume of about **1,500 items a day**: **about $7 a month** in AI costs (classification ~$5.10 with prompt caching, embeddings ~$0.83, the daily briefing ~$0.70; alerts need no AI call). Token counts measured on live calls; breakdown in `docs/ARCHITECTURE.md`.
+**~$7 a month** at 1,500 articles a day. Breakdown in `docs/ARCHITECTURE.md`.
 
----
+## Not done yet
 
-## Known limits
+- Q&A over the archive
+- Escalation when an approval is late
+- Social media (X API is paid)
 
-- No Q&A over the archive yet (cut for time).
-- No social media: the X API is paid.
-- Briefings and alerts reach one analyst by email, with no automatic escalation if unanswered. Planned: if the briefing isn't approved by 06:50, send it to a backup analyst (n8n's "Limit Wait Time" on the approval step).
-- The model is not perfectly consistent on borderline items; measured, not assumed.
-- Saudi outlets without working RSS feeds (e.g. Okaz, Sabq, SPA) are not covered.
-
-Every decision, with its reasoning and trade-off: **`docs/DECISIONS.md`**.
+Decisions and trade-offs: `docs/DECISIONS.md`
