@@ -34,31 +34,18 @@ flowchart LR
 | **GPT-6.1 Sol** | Writes the one daily briefing | Quality matters most where the DG reads (D14) |
 | **SQLite** | Articles, stories, labels, briefings and who approved them | Zero setup for a prototype; Postgres in production (D7) |
 
-## How trust is built
+## Monthly running cost
 
-- **The AI reads; the code counts.** An alert needs the AI to judge a story *about us* and *negative and serious*, **and** the code to count it as *amplified* (international outlet or 3+ outlets). One alert per story (D35).
-- **Every sentence cites a numbered source**; links come from the database, never from the AI. **Every number is checked** against the article it cites; mismatches are shown to the analyst (D31).
-- **A person approves everything**, can edit anything, and both versions are kept with name and time (D19).
-- **Measured, not assumed:** on 30 hand-labelled articles, every high-risk story caught, no false alarms (D33).
+At the directorate's real volume: **~1,500 articles a day, ~45,000 a month.** Token counts measured on live calls (2026-10-04); OpenAI prices verified 2026-10-02.
 
-## When something fails
+| Item | Per unit (measured) | Price | Per month |
+|---|---|---|---|
+| **Embeddings**, every article (`text-embedding-3-large`) | 142 tokens | $0.13 / 1M tokens | **$0.83** |
+| **Classification**, every article (GPT-6 Luna) | 1,543 input tokens, 1,540 of them cached (the instructions repeat) · ~195 output | $0.01 / 1M cached · $0.10 / 1M input · $0.50 / 1M output | **$5.10** |
+| **Daily briefing**, once a day (GPT-6.1 Sol) | ~6,600 input · ~1,000 output (≈30 on-topic articles) | $2 / 1M input · $10 / 1M output | **$0.70** |
+| **Alerts** | assembled by code, no AI call | – | **$0** |
+| **AI total** | | | **≈ $7 / month** |
+| n8n (community edition, self-hosted) | – | free licence | $0 |
+| Hosting | runs on the client's own servers; for reference, a small cloud VM is ~$20–40 / month | | client's existing infrastructure |
 
-| Failure | Behaviour |
-|---|---|
-| A feed is down | Logged per source; the briefing names it; the other feeds continue |
-| The AI is down at 06:45 | The analyst still gets every story, with a note to write the summary by hand |
-| Embeddings or labelling fail mid-run | Articles are already saved; the next run catches up |
-| A whole workflow fails | Visible in n8n's execution history |
-
-## Cost
-
-About **$10–15 a month** at the directorate's real volume of ~1,500 items a day (D14).
-
-## From prototype to a government deployment
-
-- **Inside the client's environment:** n8n and the Python service on the client's servers; SQLite → **Postgres with role-based access** ("who can see what").
-- **AI inside the walls** for confidential material: an in-region model deployment and a local embedding model (`bge-m3`), so no document leaves the network.
-- **Licensed news content** instead of public RSS; social media via a paid API.
-- **Next two weeks:** Q&A over the archive (embeddings already stored), escalation to a backup analyst when an approval is late, an AI checker for names and contradictions in briefings (once measured against analysts).
-
-Every decision, with its reasoning and trade-off: `DECISIONS.md` (D1–D37).
+**What moves the number:** without prompt caching, classification would cost about $11 a month. Upgrading classification from Luna to Sol, if the evaluation ever required it, would cost about $100 a month. Volume scales the per-article lines linearly: twice the articles, twice the cost.

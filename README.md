@@ -109,7 +109,7 @@ The remaining disagreements are borderline low-priority items, and they err towa
 
 ## Cost
 
-At the directorate's real volume of about **1,500 items a day**: **roughly $10–15 a month** (classification on GPT-6 Luna ~$4–7, the daily briefing on GPT-6.1 Sol ~$4, embeddings ~$0.50). Prices verified 2026-10-02; see D14.
+At the directorate's real volume of about **1,500 items a day**: **about $7 a month** in AI costs (classification ~$5.10 with prompt caching, embeddings ~$0.83, the daily briefing ~$0.70; alerts need no AI call). Token counts measured on live calls; breakdown in `docs/ARCHITECTURE.md`.
 
 ---
 

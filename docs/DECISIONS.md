@@ -585,3 +585,12 @@ Sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing) · [Op
 **For the panel:** "This is what the analyst sees: what the system read, what it thinks matters and why, and who approved what reached the Director General."
 
 **Rubric:** Working outcome (20%), Communication (15%).
+
+---
+
+## D38 — Cost, measured
+*2026-10-04 · Status: decided · updates D13/D14's estimates*
+
+**Measured on live calls:** classification 1,543 input tokens per article, 1,540 served from OpenAI's prompt cache, ~195 output; embeddings 142 tokens per article. At ~45,000 articles a month: classification ≈ $5.10, embeddings ≈ $0.83, daily briefing ≈ $0.70, alerts $0. **AI total ≈ $7 a month**, lower than the earlier $10–15 estimate, which didn't account for caching. Without caching, classification alone would be ~$11.
+
+**For the panel:** "Reading every article the directorate sees costs about seven dollars a month. We measured it rather than estimating it."
