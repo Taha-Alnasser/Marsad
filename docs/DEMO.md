@@ -33,7 +33,7 @@ The live demonstration (part 3 of the presentation): **about 8 minutes**, from i
 ## The demo
 
 ### 1. What the system sees (Tab 1, control room): 1 min
-> "This is the analyst's view. Nine publisher feeds, five in Arabic, all green. In the last 24 hours the system read [N] articles, recognised them as [N] stories, and found [N] that matter to this directorate."
+> "This is a control room I built for the demo, to show what the system sees. The analyst never needs it: their whole experience is an email and a form. Nine publisher feeds, five in Arabic, all green. In the last 24 hours the system read [N] articles, recognised them as [N] stories, and found [N] that matter to this directorate."
 
 Point at one story card:
 > "Each story shows the AI's reason in one sentence, how many outlets carried it, and which ones. This one was carried by eight outlets in two languages; the system recognised it as one story."
