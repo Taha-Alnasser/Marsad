@@ -15,7 +15,7 @@ The live demonstration (part 3 of the presentation): **about 8 minutes**, from i
 **30 minutes before**
 1. `./start.sh`
 2. `.venv/bin/python -m monitor.demo reset` (removes earlier demo articles and alerts)
-3. In n8n, run **Daily briefing** once and **leave the analyst email unopened**: it's waiting for you in Gmail.
+3. Control room: click **Fetch news now** so the page shows fresh news.
 4. Open these **browser tabs, in this order** (light mode, zoom 110–125% for the room):
 
 | Tab | Page |
@@ -45,7 +45,7 @@ Click the **Executions** tab of the ingest workflow:
 > "Every run is logged here. A failure would show in red."
 
 ### 3. The morning briefing (Tabs 4 → 5): 3 min
-In the analyst inbox, open **"Daily briefing draft – …"**:
+Control room: click **Send briefing now**. In the analyst inbox, open **"Daily briefing draft – …"**:
 > "At 06:00 the analyst gets this. Notice the number check: every number in the draft was matched against its source automatically."
 
 Click **Review and approve**. In the form:
@@ -57,10 +57,10 @@ Choose **Approve and send**, type your name, submit. Switch to **Tab 5 (Hotmail)
 ### 4. A crisis breaks (Tabs 1 → 2 → 4 → 5): 2 min
 > "Now the second problem: a negative story breaking at two in the afternoon."
 
-Tab 1: click **Publish demo crisis**.
+Tab 1: click **Simulate a crisis**.
 > "I've just published a synthetic article: tourists injured at a Riyadh Season concert. The system doesn't know it's a demo."
 
-Tab 2: click **Execute workflow** (instead of waiting up to 5 minutes).
+The button also fetches straight away, so there's no waiting for the 5-minute run.
 > "The AI judges it about us, and negative and serious. The code counts its spread: an international outlet. Both conditions hold, so it alerts, once."
 
 Tab 4: open **"⚠ High-risk alert: …"**, show the **"Why it alerted"** line, approve. Tab 5: the alert arrives.
