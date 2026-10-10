@@ -1,7 +1,7 @@
 """Label each new article with GPT-6 Luna, using the spread of its story (D10, D12, D14, D15)."""
 import json
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from openai import OpenAI
 
@@ -52,8 +52,12 @@ def judge(text: str) -> dict:
 
 def run() -> dict:
     conn = db.connect()
+    # Only articles published in the last 24 hours: anything older is no longer news worth alerting on,
+    # and after downtime it keeps the first run from labelling days of backlog.
+    since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     todo = conn.execute("""SELECT * FROM items WHERE story_id IS NOT NULL
-                           AND id NOT IN (SELECT item_id FROM classifications)""").fetchall()
+                           AND COALESCE(published_at, fetched_at) >= ?
+                           AND id NOT IN (SELECT item_id FROM classifications)""", (since,)).fetchall()
     inputs = [describe(conn, item) for item in todo]
     with ThreadPoolExecutor(max_workers=4) as pool:           # 4 calls at a time, not one by one
         results = list(pool.map(lambda x: safe(judge, x[0]), inputs))
