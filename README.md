@@ -76,7 +76,7 @@ flowchart LR
 
 ## Evaluation
 
-30 hand-labelled articles (22 real, 8 synthetic, 9 Arabic).
+30 articles (22 real, 8 synthetic, 9 Arabic). The correct answers were drafted by an AI assistant from my written rules; I reviewed each one and agreed with all 30. Reviewed answers are weaker than answers written blind, so this is a first check, not proof.
 
 | | |
 |---|---|
