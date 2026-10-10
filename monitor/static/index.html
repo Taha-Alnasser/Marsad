@@ -260,7 +260,7 @@
       await new Promise(ok => setTimeout(ok, 3000));
       const d = await (await fetch("/api/overview")).json();
       const changed = job === "briefing" ? d.reviews[0]?.id !== before.reviews[0]?.id
-                                         : d.last_run !== before.last_run;
+                                         : d.last_run_exact !== before.last_run_exact;
       if (changed) {
         runmsg.textContent = job === "briefing" ? "✓ Done: the draft is in the analyst's inbox."
           : job === "crisis" ? "✓ Published. The alert reaches the analyst's inbox once the AI has labelled it (about a minute)."

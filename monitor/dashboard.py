@@ -86,5 +86,6 @@ def overview() -> dict:
                for r in conn.execute("SELECT * FROM briefings ORDER BY id DESC LIMIT 12")]
     last_run = conn.execute("SELECT MAX(run_at) FROM source_runs").fetchone()[0]
     return {"now": datetime.now(RIYADH).strftime("%A %d %B · %H:%M"), "last_run": riyadh(last_run),
+            "last_run_exact": last_run,             # to the second: how the buttons tell a run has finished
             "next_briefing": next_briefing, "sources": sources, "funnel": funnel, "stories": stories,
             "reviews": reviews, "themes": themes, "sentiment": sentiment}
