@@ -1,6 +1,7 @@
 """The web endpoints n8n calls. Python does the work; n8n decides when (D6)."""
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 
 import httpx
 from fastapi import FastAPI
@@ -18,9 +19,21 @@ def health():
     return {"status": "ok"}
 
 
+INGEST_LOCK = Lock()     # one run at a time: a clock tick and a button press must not overlap
+
+
 @app.post("/ingest")
 def run_ingest():
     """Fetch all feeds, group new articles into stories, then label them."""
+    if not INGEST_LOCK.acquire(blocking=False):
+        return {"busy": True, "alerts": []}             # a run is already going; skip this one
+    try:
+        return ingest_once()
+    finally:
+        INGEST_LOCK.release()
+
+
+def ingest_once():
     sources = ingest.run()
     # If OpenAI is down, each step fails on its own: articles are already saved,
     # and the next successful run picks up whatever was missed (D8).
